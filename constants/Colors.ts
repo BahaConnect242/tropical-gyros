@@ -1,0 +1,15 @@
+export const Colors = {
+  green: '#163D26',
+  greenMid: '#2D6A45',
+  greenLight: '#4A9462',
+  orange: '#C4501E',
+  orangeLight: '#E8693A',
+  yellow: '#F2B234',
+  yellowLight: '#F9CB42',
+  cream: '#FAF6EE',
+  creamDark: '#F0EAD8',
+  dark: '#0E1A10',
+  text: '#1E2D22',
+  textMuted: '#5A6B5E',
+  white: '#FFFFFF',
+};

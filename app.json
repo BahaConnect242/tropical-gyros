@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Tropical Gyros",
+    "slug": "tropical-gyros",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#163D26"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.bahaconnect.tropicalgyros"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#163D26"
+      },
+      "package": "com.bahaconnect.tropicalgyros"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "scheme": "tropical-gyros",
+    "plugins": ["expo-router"]
+  }
+}
