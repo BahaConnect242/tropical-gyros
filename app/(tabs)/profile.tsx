@@ -1,35 +1,25 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { Colors } from '../../constants/Colors';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function ProfileScreen() {
+  const { session, signOut } = useAuth();
+
   return (
     <View style={styles.container}>
-      <Text style={styles.emoji}>👤</Text>
-      <Text style={styles.title}>Profile</Text>
-      <Text style={styles.subtitle}>Sign in to manage your account</Text>
+      <Text style={styles.label}>Signed in as</Text>
+      <Text style={styles.email}>{session?.user.email ?? 'Guest'}</Text>
+
+      <TouchableOpacity style={styles.button} onPress={signOut}>
+        <Text style={styles.buttonText}>Sign Out</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.cream,
-  },
-  emoji: {
-    fontSize: 48,
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: Colors.green,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: Colors.textMuted,
-    marginTop: 8,
-  },
+  container: { flex: 1, padding: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
+  label: { fontSize: 14, color: '#666' },
+  email: { fontSize: 18, fontWeight: '600', color: '#222', marginTop: 4, marginBottom: 32 },
+  button: { backgroundColor: '#E63946', paddingVertical: 14, paddingHorizontal: 32, borderRadius: 8 },
+  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });

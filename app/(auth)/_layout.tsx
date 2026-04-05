@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { AuthProvider, useAuth } from '../hooks/useAuth';
+import { useAuth } from '../../hooks/useAuth';
 
 function RootLayoutNav() {
   const { session, loading } = useAuth();
@@ -32,8 +32,6 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <RootLayoutNav />
-    </AuthProvider>
+    <RootLayoutNav />
   );
 }
