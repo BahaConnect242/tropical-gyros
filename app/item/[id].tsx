@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -88,8 +89,16 @@ export default function ItemDetailScreen() {
     return true;
   };
 
-  const handleAddToCart = () => {
+ const handleAddToCart = () => {
     if (!item) return;
+    if (item.is_available === false) {
+      if (Platform.OS === 'web') {
+        window.alert('This item is currently unavailable.');
+      } else {
+        Alert.alert('Unavailable', 'This item is currently unavailable.');
+      }
+      return;
+    }
     if (!canAddToCart()) {
       Alert.alert('Missing selection', 'Please choose all required options.');
       return;
@@ -115,6 +124,11 @@ export default function ItemDetailScreen() {
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
+       {item.is_available === false && (
+          <View style={styles.unavailableBanner}>
+            <Text style={styles.unavailableText}>This item is currently unavailable</Text>
+          </View>
+        )}
         <Text style={styles.name}>{item.name}</Text>
         {item.description && (
           <Text style={styles.description}>{item.description}</Text>
@@ -180,10 +194,10 @@ export default function ItemDetailScreen() {
       </ScrollView>
 
       <View style={styles.bottomBar}>
-        <Pressable
-          style={[styles.addButton, !canAddToCart() && styles.addButtonDisabled]}
+       <Pressable
+          style={[styles.addButton, (!canAddToCart() || item.is_available === false) && styles.addButtonDisabled]}
           onPress={handleAddToCart}
-          disabled={!canAddToCart()}
+          disabled={!canAddToCart() || item.is_available === false}
         >
           <Text style={styles.addButtonText}>
             Add to Cart · ${computePrice().toFixed(2)}
@@ -201,6 +215,18 @@ const styles = StyleSheet.create({
   name: { fontSize: 28, fontWeight: 'bold', color: '#163D26', marginBottom: 4 },
   description: { fontSize: 15, color: '#555', marginBottom: 12, lineHeight: 22 },
   basePrice: { fontSize: 20, fontWeight: '600', color: '#E63946', marginBottom: 20 },
+  unavailableBanner: {
+    backgroundColor: '#E63946',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 12,
+    alignItems: 'center',
+  },
+  unavailableText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 14,
+  },
   group: { marginBottom: 24 },
   groupTitle: { fontSize: 17, fontWeight: '600', color: '#163D26' },
   groupSubtitle: { fontSize: 13, color: '#888', marginBottom: 10 },

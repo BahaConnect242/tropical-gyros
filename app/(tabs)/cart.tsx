@@ -8,6 +8,7 @@ import {
   Pressable,
   SafeAreaView,
   Alert,
+  Platform,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,20 +33,31 @@ export default function CartScreen() {
   const tax = subtotal * TAX_RATE;
   const total = subtotal + tax;
 
-  const handleRemove = (cart_item_id: string, name: string) => {
-    Alert.alert('Remove item?', `Remove ${name} from your cart?`, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Remove', style: 'destructive', onPress: () => removeItem(cart_item_id) },
-    ]);
+ const handleRemove = (cart_item_id: string, name: string) => {
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Remove ${name} from your cart?`)) {
+        removeItem(cart_item_id);
+      }
+    } else {
+      Alert.alert('Remove item?', `Remove ${name} from your cart?`, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Remove', style: 'destructive', onPress: () => removeItem(cart_item_id) },
+      ]);
+    }
   };
 
   const handleClear = () => {
-    Alert.alert('Clear cart?', 'This will remove all items from your cart.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Clear', style: 'destructive', onPress: () => clearCart() },
-    ]);
+    if (Platform.OS === 'web') {
+      if (window.confirm('This will remove all items from your cart.')) {
+        clearCart();
+      }
+    } else {
+      Alert.alert('Clear cart?', 'This will remove all items from your cart.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Clear', style: 'destructive', onPress: () => clearCart() },
+      ]);
+    }
   };
-
   const handleCheckout = () => {
     router.push('/checkout');
   };

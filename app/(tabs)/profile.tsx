@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, SafeAreaView } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../hooks/useAuth';
+import { supabase } from '../../lib/supabase';
 
 const COLORS = {
   bg: '#F0EAD8',
@@ -17,8 +18,24 @@ const COLORS = {
 
 export default function ProfileScreen() {
   const { session, signOut } = useAuth();
-  const email = session?.user?.email ?? 'Guest';
-  const name = session?.user?.user_metadata?.full_name ?? email.split('@')[0];
+  const user = session?.user;
+  const email = user?.email ?? 'Guest';
+  const name = user?.user_metadata?.full_name ?? email.split('@')[0];
+  const [role, setRole] = useState<string>('customer');
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      if (data?.role) setRole(data.role);
+    })();
+  }, [user]);
+
+  const isStaff = role === 'staff' || role === 'admin';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -28,6 +45,11 @@ export default function ProfileScreen() {
         </View>
         <Text style={styles.name}>{name}</Text>
         <Text style={styles.email}>{email}</Text>
+        {isStaff && (
+          <View style={styles.roleBadge}>
+            <Text style={styles.roleBadgeText}>{role.toUpperCase()}</Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.section}>
@@ -37,11 +59,20 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={18} color={COLORS.gray} />
         </Pressable>
 
-        <Pressable style={styles.menuItem} onPress={() => router.push('/(admin)/orders')}>
-          <Ionicons name="grid-outline" size={22} color={COLORS.gold} />
-          <Text style={styles.menuText}>Staff Dashboard</Text>
-          <Ionicons name="chevron-forward" size={18} color={COLORS.gray} />
-        </Pressable>
+       {isStaff && (
+          <>
+            <Pressable style={styles.menuItem} onPress={() => router.push('/(admin)/orders')}>
+              <Ionicons name="grid-outline" size={22} color={COLORS.gold} />
+              <Text style={styles.menuText}>Staff Dashboard</Text>
+              <Ionicons name="chevron-forward" size={18} color={COLORS.gray} />
+            </Pressable>
+            <Pressable style={styles.menuItem} onPress={() => router.push('/(admin)/menu-edit')}>
+              <Ionicons name="restaurant-outline" size={22} color={COLORS.green} />
+              <Text style={styles.menuText}>Menu Manager</Text>
+              <Ionicons name="chevron-forward" size={18} color={COLORS.gray} />
+            </Pressable>
+          </>
+        )}
       </View>
 
       <View style={styles.section}>
@@ -76,6 +107,14 @@ const styles = StyleSheet.create({
   avatarText: { fontSize: 28, fontWeight: '800', color: COLORS.gold },
   name: { fontSize: 20, fontWeight: '700', color: COLORS.dark },
   email: { fontSize: 14, color: COLORS.gray, marginTop: 2 },
+  roleBadge: {
+    marginTop: 8,
+    backgroundColor: COLORS.gold,
+    paddingHorizontal: 12,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  roleBadgeText: { fontSize: 11, fontWeight: '800', color: COLORS.green, letterSpacing: 1 },
   section: {
     marginTop: 16,
     marginHorizontal: 16,

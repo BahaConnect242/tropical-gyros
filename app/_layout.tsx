@@ -35,11 +35,12 @@ function RootLayoutNav() {
           headerTintColor: '#F2B234',
         }}
       />
-    <Stack.Screen name="checkout" options={{ headerShown: false }} />
-<Stack.Screen name="payment" options={{ headerShown: false }} />
+<Stack.Screen name="checkout" options={{ headerShown: true }} />
+<Stack.Screen name="payment" options={{ headerShown: true }} />
 <Stack.Screen name="order-success" options={{ headerShown: false }} />
 <Stack.Screen name="order/[id]" options={{ headerShown: true }} />
 <Stack.Screen name="(admin)/orders" options={{ headerShown: true }} />
+<Stack.Screen name="(admin)/menu-edit" options={{ headerShown: true }} />
   </Stack>
   );
 }

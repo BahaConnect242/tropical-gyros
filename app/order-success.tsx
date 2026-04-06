@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, SafeAreaView, Platform } from 'react-native';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import QRCode from 'react-native-qrcode-svg';
 
 const COLORS = {
   bg: '#F0EAD8',
@@ -19,6 +20,12 @@ export default function OrderSuccessScreen() {
   const total = params.total as string;
   const orderId = params.orderId as string;
 
+  const qrData = JSON.stringify({
+    orderId,
+    pickupCode,
+    type: 'tropical-gyros-pickup',
+  });
+
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -33,7 +40,28 @@ export default function OrderSuccessScreen() {
           <View style={styles.codeBox}>
             <Text style={styles.codeLabel}>Your Pickup Code</Text>
             <Text style={styles.codeValue}>{pickupCode}</Text>
-            <Text style={styles.codeHint}>Show this code at pickup</Text>
+
+            {Platform.OS !== 'web' && (
+              <View style={styles.qrWrap}>
+                <QRCode
+                  value={qrData}
+                  size={160}
+                  color={COLORS.green}
+                  backgroundColor={COLORS.white}
+                />
+              </View>
+            )}
+
+            {Platform.OS === 'web' && (
+              <View style={styles.qrFallback}>
+                <Ionicons name="qr-code-outline" size={80} color={COLORS.green} />
+                <Text style={styles.qrFallbackText}>
+                  QR code available in the mobile app
+                </Text>
+              </View>
+            )}
+
+            <Text style={styles.codeHint}>Show this code or QR at pickup</Text>
           </View>
         ) : (
           <View style={styles.codeBox}>
@@ -98,6 +126,24 @@ const styles = StyleSheet.create({
     color: COLORS.green,
     letterSpacing: 8,
     marginVertical: 6,
+  },
+  qrWrap: {
+    marginVertical: 16,
+    padding: 12,
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.gold,
+  },
+  qrFallback: {
+    marginVertical: 16,
+    alignItems: 'center',
+  },
+  qrFallbackText: {
+    fontSize: 12,
+    color: COLORS.gray,
+    marginTop: 6,
+    fontStyle: 'italic',
   },
   codeHint: { fontSize: 13, color: COLORS.gray, marginTop: 4 },
   detailsBox: {

@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
@@ -163,7 +163,13 @@ export default function AdminOrdersScreen() {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [fetchOrders]);
+}, [fetchOrders]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchOrders();
+    }, [fetchOrders])
+  );
 
   const advanceStatus = async (order: AdminOrder) => {
     const next = getNextStatus(order.order_type, order.status);
@@ -173,10 +179,11 @@ export default function AdminOrdersScreen() {
       .from('orders')
       .update({ status: next, updated_at: new Date().toISOString() })
       .eq('id', order.id);
-    if (error) {
+if (error) {
       console.error(error);
       if (Platform.OS === 'web') window.alert('Failed to update status');
     }
+    await fetchOrders();
     setUpdating(null);
   };
 
@@ -186,10 +193,11 @@ export default function AdminOrdersScreen() {
       : true;
     if (!proceed) return;
     setUpdating(orderId);
-    await supabase
+await supabase
       .from('orders')
       .update({ status: 'cancelled', updated_at: new Date().toISOString() })
       .eq('id', orderId);
+    await fetchOrders();
     setUpdating(null);
   };
 

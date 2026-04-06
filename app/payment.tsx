@@ -7,8 +7,10 @@ import {
   ActivityIndicator,
   Platform,
   ScrollView,
+  Pressable,
 } from 'react-native';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { useCart } from '../hooks/useCart';
 import { useAuth } from '../hooks/useAuth';
@@ -33,8 +35,9 @@ function generatePickupCode(): string {
 export default function PaymentScreen() {
   const params = useLocalSearchParams();
   const { items, clearCart } = useCart();
-const { session, loading: authLoading } = useAuth();
-  const user = session?.user;  const [status, setStatus] = useState<'loading' | 'ready' | 'processing' | 'error'>('loading');
+  const { session, loading: authLoading } = useAuth();
+  const user = session?.user;
+  const [status, setStatus] = useState<'loading' | 'ready' | 'processing' | 'error'>('loading');
   const [errorMsg, setErrorMsg] = useState<string>('');
   const paypalRef = useRef<HTMLDivElement>(null);
   const buttonsRendered = useRef(false);
@@ -97,8 +100,8 @@ const { session, loading: authLoading } = useAuth();
       return;
     }
 
- if (authLoading) {
-      return; // wait for auth to finish loading
+    if (authLoading) {
+      return;
     }
 
     if (!user) {
@@ -124,7 +127,8 @@ const { session, loading: authLoading } = useAuth();
       setErrorMsg('Failed to load PayPal. Check your internet connection.');
     };
     document.body.appendChild(script);
-}, [user, authLoading]);
+  }, [user, authLoading]);
+
   useEffect(() => {
     if (status !== 'ready' || buttonsRendered.current) return;
     if (!paypalRef.current) return;
@@ -189,6 +193,11 @@ const { session, loading: authLoading } = useAuth();
           headerStyle: { backgroundColor: COLORS.green },
           headerTintColor: COLORS.gold,
           headerTitleStyle: { fontWeight: '700' },
+          headerLeft: () => (
+            <Pressable onPress={() => router.back()} style={{ paddingRight: 12 }}>
+              <Ionicons name="arrow-back" size={24} color={COLORS.gold} />
+            </Pressable>
+          ),
         }}
       />
       <ScrollView contentContainerStyle={styles.scroll}>

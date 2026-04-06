@@ -7,12 +7,11 @@ import {
   TextInput,
   Pressable,
   SafeAreaView,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-
 import { router, Stack } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useCart } from '../hooks/useCart';
 
 const COLORS = {
@@ -30,6 +29,15 @@ const TAX_RATE = 0.10;
 const DELIVERY_FEE = 5.00;
 
 type OrderType = 'pickup' | 'delivery';
+
+function showAlert(title: string, message: string) {
+  if (Platform.OS === 'web') {
+    window.alert(`${title}\n${message}`);
+  } else {
+    const { Alert } = require('react-native');
+    Alert.alert(title, message);
+  }
+}
 
 export default function CheckoutScreen() {
   const { items, subtotal, item_count } = useCart();
@@ -50,13 +58,9 @@ export default function CheckoutScreen() {
     return true;
   };
 
- const handleProceed = () => {
+  const handleProceed = () => {
     if (!canProceed()) {
-      if (Platform.OS === 'web') {
-        window.alert('Please fill in all required fields.');
-      } else {
-        Alert.alert('Missing info', 'Please fill in all required fields.');
-      }
+      showAlert('Missing info', 'Please fill in all required fields.');
       return;
     }
     router.push({
@@ -97,6 +101,11 @@ export default function CheckoutScreen() {
           headerStyle: { backgroundColor: COLORS.green },
           headerTintColor: COLORS.gold,
           headerTitleStyle: { fontWeight: '700' },
+          headerLeft: () => (
+            <Pressable onPress={() => router.back()} style={{ paddingRight: 12 }}>
+              <Ionicons name="arrow-back" size={24} color={COLORS.gold} />
+            </Pressable>
+          ),
         }}
       />
       <KeyboardAvoidingView
@@ -111,7 +120,11 @@ export default function CheckoutScreen() {
               style={[styles.toggleBtn, orderType === 'pickup' && styles.toggleBtnActive]}
               onPress={() => setOrderType('pickup')}
             >
-              <Text style={[styles.iconText, { color: orderType === 'pickup' ? COLORS.white : COLORS.green }]}>🛍️</Text>
+              <Ionicons
+                name="bag-handle-outline"
+                size={22}
+                color={orderType === 'pickup' ? COLORS.white : COLORS.green}
+              />
               <Text style={[styles.toggleText, orderType === 'pickup' && styles.toggleTextActive]}>
                 Pickup
               </Text>
@@ -120,7 +133,11 @@ export default function CheckoutScreen() {
               style={[styles.toggleBtn, orderType === 'delivery' && styles.toggleBtnActive]}
               onPress={() => setOrderType('delivery')}
             >
-              <Text style={[styles.iconText, { color: orderType === 'delivery' ? COLORS.white : COLORS.green }]}>🚲</Text>
+              <Ionicons
+                name="bicycle-outline"
+                size={22}
+                color={orderType === 'delivery' ? COLORS.white : COLORS.green}
+              />
               <Text
                 style={[styles.toggleText, orderType === 'delivery' && styles.toggleTextActive]}
               >
@@ -211,7 +228,7 @@ export default function CheckoutScreen() {
             disabled={!canProceed()}
           >
             <Text style={styles.payBtnText}>Continue to Payment · ${total.toFixed(2)}</Text>
-            <Text style={styles.iconText}>→</Text>
+            <Ionicons name="arrow-forward" size={20} color={COLORS.white} />
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -310,7 +327,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
   },
-  iconText: { fontSize: 20 },
   payBtnDisabled: { backgroundColor: COLORS.gray },
   payBtnText: { color: COLORS.white, fontWeight: '700', fontSize: 15 },
 });
