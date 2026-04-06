@@ -1,49 +1,79 @@
+import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, SectionList } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  RefreshControl,
+  SectionList,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { supabase } from '../../lib/supabase';
-import type { MenuItem, MenuCategory } from '../../types';
+import { useCart } from '../../hooks/useCart';
+import type { MenuCategory, MenuItem } from '../../types';
 
-interface MenuSection {
+type Section = {
   title: string;
   data: MenuItem[];
-}
+};
 
 export default function MenuScreen() {
-  const [sections, setSections] = useState<MenuSection[]>([]);
+  const router = useRouter();
+  const { item_count } = useCart();
+  const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadMenu();
-  }, []);
-
-  async function loadMenu() {
-    try {
-      setLoading(true);
-      const { data: categories, error: catError } = await supabase
+  const loadMenu = async () => {
+    // Fetch categories and items in parallel
+    const [catsRes, itemsRes] = await Promise.all([
+      supabase
         .from('menu_categories')
         .select('*')
         .eq('is_active', true)
-        .order('display_order');
-      if (catError) throw catError;
-
-      const { data: items, error: itemError } = await supabase
+        .order('display_order'),
+   supabase
         .from('menu_items')
         .select('*')
-        .eq('is_available', true);
-      if (itemError) throw itemError;
+        .eq('is_available', true)
+        .order('name'),
+    ]);
 
-      const grouped: MenuSection[] = (categories as MenuCategory[]).map((cat) => ({
-        title: cat.name,
-        data: (items as MenuItem[]).filter((i) => i.category_id === cat.id),
-      }));
-      setSections(grouped);
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
+    if (catsRes.error) {
+      console.error('Failed to load categories:', catsRes.error);
+      return;
     }
-  }
+    if (itemsRes.error) {
+      console.error('Failed to load items:', itemsRes.error);
+      return;
+    }
+
+    const categories = (catsRes.data ?? []) as MenuCategory[];
+    const items = (itemsRes.data ?? []) as MenuItem[];
+
+    const grouped: Section[] = categories
+      .map((cat) => ({
+        title: cat.name,
+        data: items.filter((i) => i.category_id === cat.id),
+      }))
+      .filter((s) => s.data.length > 0);
+
+    setSections(grouped);
+  };
+
+  useEffect(() => {
+    (async () => {
+      await loadMenu();
+      setLoading(false);
+    })();
+  }, []);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadMenu();
+    setRefreshing(false);
+  };
 
   if (loading) {
     return (
@@ -53,58 +83,102 @@ export default function MenuScreen() {
     );
   }
 
-  if (error) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.error}>Error loading menu: {error}</Text>
-      </View>
-    );
-  }
-
   return (
-    <SectionList
-      sections={sections}
-      keyExtractor={(item) => item.id}
-      renderSectionHeader={({ section }) => (
-        <Text style={styles.sectionHeader}>{section.title}</Text>
-      )}
-      renderItem={({ item }) => (
-        <View style={styles.item}>
-          <View style={styles.itemInfo}>
-            <Text style={styles.itemName}>{item.name}</Text>
-            {item.description && <Text style={styles.itemDesc}>{item.description}</Text>}
+    <View style={styles.container}>
+      <SectionList
+        sections={sections}
+        keyExtractor={(item) => item.id}
+        renderSectionHeader={({ section }) => (
+          <Text style={styles.sectionHeader}>{section.title}</Text>
+        )}
+        renderItem={({ item }) => (
+          <Pressable
+            onPress={() => router.push(`/item/${item.id}`)}
+            style={({ pressed }) => [
+              styles.itemRow,
+              pressed && { opacity: 0.7 },
+            ]}
+          >
+            <View style={styles.itemInfo}>
+              <Text style={styles.itemName}>{item.name}</Text>
+              {item.description && (
+                <Text style={styles.itemDescription} numberOfLines={2}>
+                  {item.description}
+                </Text>
+              )}
+            </View>
+            <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
+          </Pressable>
+        )}
+        contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
+        ListEmptyComponent={
+          <View style={styles.center}>
+            <Text style={styles.emptyText}>No menu items available.</Text>
           </View>
-          <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
-        </View>
+        }
+        stickySectionHeadersEnabled
+      />
+
+      {/* Floating cart badge */}
+      {item_count > 0 && (
+        <Pressable
+          style={styles.cartBadge}
+          onPress={() => router.push('/(tabs)/cart')}
+        >
+          <Text style={styles.cartBadgeText}>
+            View Cart · {item_count} {item_count === 1 ? 'item' : 'items'}
+          </Text>
+        </Pressable>
       )}
-      contentContainerStyle={styles.list}
-      stickySectionHeadersEnabled={true}
-    />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
-  list: { backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: '#F0EAD8' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
+  listContent: { paddingBottom: 100 },
   sectionHeader: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-    backgroundColor: '#E63946',
+    backgroundColor: '#163D26',
+    color: '#F2B234',
+    fontSize: 16,
+    fontWeight: '700',
+    paddingHorizontal: 20,
     paddingVertical: 10,
-    paddingHorizontal: 16,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
-  item: {
+  itemRow: {
     flexDirection: 'row',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0EAD8',
   },
   itemInfo: { flex: 1, marginRight: 12 },
-  itemName: { fontSize: 16, fontWeight: '600', color: '#222' },
-  itemDesc: { fontSize: 13, color: '#666', marginTop: 4 },
-  itemPrice: { fontSize: 16, fontWeight: 'bold', color: '#E63946' },
-  error: { fontSize: 14, color: '#E63946', textAlign: 'center', padding: 20 },
+  itemName: { fontSize: 16, fontWeight: '600', color: '#163D26', marginBottom: 2 },
+  itemDescription: { fontSize: 13, color: '#777', lineHeight: 18 },
+  itemPrice: { fontSize: 16, fontWeight: '700', color: '#E63946' },
+  emptyText: { fontSize: 15, color: '#777' },
+  cartBadge: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    backgroundColor: '#E63946',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  cartBadgeText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });

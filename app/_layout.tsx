@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import { AuthProvider, useAuth } from '../hooks/useAuth';
+import { CartProvider } from '../hooks/useCart';
 
 function RootLayoutNav() {
   const { session, loading } = useAuth();
@@ -10,7 +10,9 @@ function RootLayoutNav() {
 
   useEffect(() => {
     if (loading) return;
+
     const inAuthGroup = segments[0] === '(auth)';
+
     if (!session && !inAuthGroup) {
       router.replace('/(auth)/login');
     } else if (session && inAuthGroup) {
@@ -19,21 +21,34 @@ function RootLayoutNav() {
   }, [session, loading, segments]);
 
   return (
-    <>
-      <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(admin)" />
-      </Stack>
-    </>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="(admin)" />
+      <Stack.Screen
+        name="item/[id]"
+        options={{
+          headerShown: true,
+          title: 'Customize',
+          presentation: 'modal',
+          headerStyle: { backgroundColor: '#163D26' },
+          headerTintColor: '#F2B234',
+        }}
+      />
+    <Stack.Screen name="checkout" options={{ headerShown: false }} />
+<Stack.Screen name="payment" options={{ headerShown: false }} />
+<Stack.Screen name="order-success" options={{ headerShown: false }} />
+<Stack.Screen name="order/[id]" options={{ headerShown: true }} />
+  </Stack>
   );
 }
 
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <RootLayoutNav />
+      <CartProvider>
+        <RootLayoutNav />
+      </CartProvider>
     </AuthProvider>
   );
 }

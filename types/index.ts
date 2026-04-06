@@ -1,46 +1,47 @@
-// User roles
+// ─── Enums ─────────────────────────────────────────────────────────────
 export type UserRole = 'customer' | 'staff' | 'admin';
 
-// Order types
 export type OrderType = 'pickup' | 'delivery';
 
-// Order status flow
 export type OrderStatus =
   | 'placed'
   | 'confirmed'
   | 'preparing'
   | 'ready'
   | 'out_for_delivery'
-  | 'delivered'
   | 'picked_up'
+  | 'delivered'
   | 'cancelled';
 
-// Payment status
-export type PaymentStatus = 'pending' | 'paid' | 'refunded' | 'failed';
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 
-// User profile (extends Supabase auth)
-export interface Profile {
+// ─── Core DB Models ────────────────────────────────────────────────────
+export type Profile = {
   id: string;
-  email: string;
-  full_name: string;
+  full_name: string | null;
   phone: string | null;
   role: UserRole;
   default_address: string | null;
   created_at: string;
   updated_at: string;
-}
+};
 
-// Menu category
-export interface MenuCategory {
+export type MenuCategory = {
   id: string;
   name: string;
   display_order: number;
   is_active: boolean;
   created_at: string;
-}
+};
 
-// Menu item
-export interface MenuItem {
+export type CustomizationOption = {
+  group_name: string;
+  required: boolean;
+  multi_select: boolean;
+  options: { name: string; price_delta: number }[];
+};
+
+export type MenuItem = {
   id: string;
   category_id: string;
   name: string;
@@ -50,67 +51,66 @@ export interface MenuItem {
   is_available: boolean;
   customization_options: CustomizationOption[] | null;
   created_at: string;
-  updated_at: string;
-}
+};
 
-// Customization options (stored as JSONB)
-export interface CustomizationOption {
-  name: string;
-  type: 'single' | 'multiple';
-  required: boolean;
-  choices: {
-    label: string;
-    price_modifier: number;
-  }[];
-}
+export type OrderItem = {
+  id: string;
+  order_id: string;
+  menu_item_id: string;
+  name_snapshot: string;
+  price_snapshot: number;
+  quantity: number;
+  customizations: Record<string, string[]> | null;
+  special_instructions: string | null;
+};
 
-// Order
-export interface Order {
+export type Order = {
   id: string;
   user_id: string;
   status: OrderStatus;
   order_type: OrderType;
+  subtotal: number;
+  tax: number;
+  delivery_fee: number;
   total: number;
   payment_status: PaymentStatus;
   payment_method: string | null;
+  payment_reference: string | null;
   pickup_code: string | null;
   delivery_address: string | null;
-  special_instructions: string | null;
+  customer_name: string | null;
+  customer_phone: string | null;
+  notes: string | null;
   created_at: string;
   updated_at: string;
-}
+};
 
-// Order item
-export interface OrderItem {
-  id: string;
-  order_id: string;
-  menu_item_id: string;
-  quantity: number;
-  customizations: Record<string, string | string[]> | null;
-  item_price: number;
-  item_name: string;
-}
-
-// Cart item (client-side only)
-export interface CartItem {
-  menu_item: MenuItem;
-  quantity: number;
-  customizations: Record<string, string | string[]> | null;
-  subtotal: number;
-}
-
-// Store settings
-export interface StoreSettings {
+export type StoreSettings = {
   id: string;
   store_name: string;
-  store_address: string;
-  store_phone: string;
-  store_lat: number;
-  store_lng: number;
   tax_rate: number;
   delivery_fee: number;
-  max_delivery_radius_miles: number;
-  operating_hours: Record<string, { open: string; close: string }>;
-  delivery_hours: Record<string, { open: string; close: string }>;
+  delivery_radius_miles: number;
+  store_lat: number | null;
+  store_lng: number | null;
   is_open: boolean;
-}
+  pickup_enabled: boolean;
+  delivery_enabled: boolean;
+  updated_at: string;
+};
+
+// ─── Client-Side Cart ──────────────────────────────────────────────────
+// Lives only in the app (AsyncStorage) — not a DB table.
+// `cart_item_id` is a local unique ID so the same menu item with different
+// customizations can appear as separate cart lines.
+// `price` is a snapshot at add-to-cart time.
+export type CartItem = {
+  cart_item_id: string;
+  menu_item_id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  customizations: Record<string, string[]>;
+  special_instructions: string;
+  image_url: string | null;
+};
