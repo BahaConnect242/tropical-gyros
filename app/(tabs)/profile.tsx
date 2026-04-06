@@ -53,7 +53,7 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.section}>
-        <Pressable style={styles.menuItem} onPress={() => router.push('/(tabs)/orders')}>
+  <Pressable style={({ pressed }) => [styles.menuItem, pressed && { opacity: 0.7, backgroundColor: COLORS.bg }]} onPress={() => router.push('/(tabs)/orders')}>
           <Ionicons name="receipt-outline" size={22} color={COLORS.green} />
           <Text style={styles.menuText}>My Orders</Text>
           <Ionicons name="chevron-forward" size={18} color={COLORS.gray} />
@@ -61,12 +61,12 @@ export default function ProfileScreen() {
 
        {isStaff && (
           <>
-            <Pressable style={styles.menuItem} onPress={() => router.push('/(admin)/orders')}>
+        <Pressable style={({ pressed }) => [styles.menuItem, pressed && { opacity: 0.7, backgroundColor: COLORS.bg }]} onPress={() => router.push('/(admin)/orders')}>
               <Ionicons name="grid-outline" size={22} color={COLORS.gold} />
               <Text style={styles.menuText}>Staff Dashboard</Text>
               <Ionicons name="chevron-forward" size={18} color={COLORS.gray} />
             </Pressable>
-            <Pressable style={styles.menuItem} onPress={() => router.push('/(admin)/menu-edit')}>
+<Pressable style={({ pressed }) => [styles.menuItem, pressed && { opacity: 0.7, backgroundColor: COLORS.bg }]} onPress={() => router.push('/(admin)/menu-edit')}>
               <Ionicons name="restaurant-outline" size={22} color={COLORS.green} />
               <Text style={styles.menuText}>Menu Manager</Text>
               <Ionicons name="chevron-forward" size={18} color={COLORS.gray} />
@@ -76,7 +76,7 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.section}>
-        <Pressable style={styles.signOutBtn} onPress={signOut}>
+     <Pressable style={({ pressed }) => [styles.signOutBtn, pressed && { opacity: 0.7 }]} onPress={signOut}>
           <Ionicons name="log-out-outline" size={22} color={COLORS.red} />
           <Text style={styles.signOutText}>Sign Out</Text>
         </Pressable>

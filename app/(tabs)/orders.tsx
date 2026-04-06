@@ -13,6 +13,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
+import { OrdersSkeleton } from '../../components/Skeleton';
 
 const COLORS = {
   bg: '#F0EAD8',
@@ -127,12 +128,13 @@ export default function OrdersScreen() {
     setRefreshing(false);
   };
 
-  if (authLoading || loading) {
+ if (authLoading || loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.centerWrap}>
-          <ActivityIndicator size="large" color={COLORS.green} />
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>My Orders</Text>
         </View>
+        <OrdersSkeleton />
       </SafeAreaView>
     );
   }
@@ -184,8 +186,11 @@ export default function OrdersScreen() {
         renderItem={({ item }) => {
           const cfg = STATUS_CONFIG[item.status] || STATUS_CONFIG.placed;
           return (
-            <Pressable
-              style={styles.card}
+         <Pressable
+              style={({ pressed }) => [
+                styles.card,
+                pressed && { transform: [{ scale: 0.97 }], opacity: 0.85 },
+              ]}
               onPress={() => router.push(`/order/${item.id}`)}
             >
               <View style={styles.cardTopRow}>

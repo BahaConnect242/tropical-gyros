@@ -16,12 +16,12 @@ function RootLayoutNav() {
     if (!session && !inAuthGroup) {
       router.replace('/(auth)/login');
     } else if (session && inAuthGroup) {
-      router.replace('/(tabs)/menu');
+  router.replace('/(tabs)');
     }
   }, [session, loading, segments]);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+ <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="(admin)" />
@@ -31,17 +31,52 @@ function RootLayoutNav() {
           headerShown: true,
           title: 'Customize',
           presentation: 'modal',
+          animation: 'slide_from_bottom',
           headerStyle: { backgroundColor: '#163D26' },
           headerTintColor: '#F2B234',
+          headerTitleStyle: { fontWeight: '700' },
         }}
       />
-<Stack.Screen name="checkout" options={{ headerShown: true }} />
-<Stack.Screen name="payment" options={{ headerShown: true }} />
-<Stack.Screen name="order-success" options={{ headerShown: false }} />
-<Stack.Screen name="order/[id]" options={{ headerShown: true }} />
-<Stack.Screen name="(admin)/orders" options={{ headerShown: true }} />
-<Stack.Screen name="(admin)/menu-edit" options={{ headerShown: true }} />
-  </Stack>
+      <Stack.Screen
+        name="checkout"
+        options={{
+          headerShown: true,
+          title: 'Checkout',
+          animation: 'slide_from_right',
+          headerStyle: { backgroundColor: '#163D26' },
+          headerTintColor: '#F2B234',
+          headerTitleStyle: { fontWeight: '700' },
+        }}
+      />
+      <Stack.Screen
+        name="payment"
+        options={{
+          headerShown: true,
+          title: 'Payment',
+          animation: 'slide_from_right',
+          headerStyle: { backgroundColor: '#163D26' },
+          headerTintColor: '#F2B234',
+          headerTitleStyle: { fontWeight: '700' },
+        }}
+      />
+      <Stack.Screen
+        name="order-success"
+        options={{ headerShown: false, animation: 'fade' }}
+      />
+      <Stack.Screen
+        name="order/[id]"
+        options={{
+          headerShown: true,
+          title: 'Order Details',
+          animation: 'slide_from_right',
+          headerStyle: { backgroundColor: '#163D26' },
+          headerTintColor: '#F2B234',
+          headerTitleStyle: { fontWeight: '700' },
+        }}
+      />
+      <Stack.Screen name="(admin)/orders" options={{ headerShown: true }} />
+      <Stack.Screen name="(admin)/menu-edit" options={{ headerShown: true }} />
+    </Stack>
   );
 }
 
