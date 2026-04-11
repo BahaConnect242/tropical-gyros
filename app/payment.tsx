@@ -44,6 +44,7 @@ export default function PaymentScreen() {
 
   const total = parseFloat((params.total as string) || '0');
   const orderType = params.orderType as 'pickup' | 'delivery';
+  const demoMode = !PAYPAL_CLIENT_ID;
 
   const createOrder = async (paypalTxId: string) => {
     if (!user) throw new Error('Not logged in');
@@ -87,16 +88,37 @@ export default function PaymentScreen() {
     return order;
   };
 
+  const handleDemoPay = async () => {
+    if (!user) {
+      setStatus('error');
+      setErrorMsg('Please log in to complete payment.');
+      return;
+    }
+    setStatus('processing');
+    try {
+      const txId = `demo_${Date.now()}`;
+      const order = await createOrder(txId);
+      clearCart();
+      router.replace({
+        pathname: '/order-success',
+        params: {
+          orderId: order.id,
+          pickupCode: order.pickup_code || '',
+          orderType,
+          total: total.toFixed(2),
+        },
+      });
+    } catch (err: any) {
+      console.error('Demo order creation failed:', err);
+      setStatus('error');
+      setErrorMsg(err.message || 'Something went wrong saving your order.');
+    }
+  };
+
   useEffect(() => {
     if (Platform.OS !== 'web') {
       setStatus('error');
       setErrorMsg('Mobile payments coming soon. Use the web app for now.');
-      return;
-    }
-
-    if (!PAYPAL_CLIENT_ID) {
-      setStatus('error');
-      setErrorMsg('PayPal not configured. Check .env file.');
       return;
     }
 
@@ -107,6 +129,12 @@ export default function PaymentScreen() {
     if (!user) {
       setStatus('error');
       setErrorMsg('Please log in to complete payment.');
+      return;
+    }
+
+    // Demo mode fallback: no PayPal client id configured, use the demo pay button.
+    if (!PAYPAL_CLIENT_ID) {
+      setStatus('ready');
       return;
     }
 
@@ -131,6 +159,7 @@ export default function PaymentScreen() {
 
   useEffect(() => {
     if (status !== 'ready' || buttonsRendered.current) return;
+    if (demoMode) return;
     if (!paypalRef.current) return;
 
     const paypal = (window as any).paypal;
@@ -170,7 +199,7 @@ export default function PaymentScreen() {
           } catch (err: any) {
             console.error('Order creation failed:', err);
             setStatus('error');
-            setErrorMsg(err.message || 'Something went wrong saving your order. Please contact support — your payment went through.');
+            setErrorMsg(err.message || 'Something went wrong saving your order. Please contact support. Your payment went through.');
           }
         },
         onError: (err: any) => {
@@ -227,12 +256,12 @@ export default function PaymentScreen() {
           </View>
         </View>
 
-        <Text style={styles.payWithLabel}>Pay with PayPal</Text>
+        <Text style={styles.payWithLabel}>{demoMode ? 'Demo Payment' : 'Pay with PayPal'}</Text>
 
         {status === 'loading' && (
           <View style={styles.centerWrap}>
             <ActivityIndicator size="large" color={COLORS.green} />
-            <Text style={styles.hint}>Loading PayPal...</Text>
+            <Text style={styles.hint}>Loading payment...</Text>
           </View>
         )}
 
@@ -249,7 +278,17 @@ export default function PaymentScreen() {
           </View>
         )}
 
-        {Platform.OS === 'web' && (
+        {demoMode && status === 'ready' && (
+          <Pressable
+            style={({ pressed }) => [styles.demoPayBtn, pressed && { opacity: 0.85 }]}
+            onPress={handleDemoPay}
+          >
+            <Ionicons name="card-outline" size={22} color={COLORS.gold} />
+            <Text style={styles.demoPayText}>Place Demo Order (${total.toFixed(2)})</Text>
+          </Pressable>
+        )}
+
+        {!demoMode && Platform.OS === 'web' && (
           <View
             // @ts-ignore - web-only ref
             ref={paypalRef}
@@ -258,7 +297,9 @@ export default function PaymentScreen() {
         )}
 
         <Text style={styles.disclaimer}>
-          This is a sandbox/test payment. No real money will be charged.
+          {demoMode
+            ? 'Demo mode: no real payment is processed. Orders still save to the system.'
+            : 'This is a sandbox/test payment. No real money will be charged.'}
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -313,6 +354,22 @@ const styles = StyleSheet.create({
     borderColor: COLORS.red,
   },
   errorText: { color: COLORS.red, fontSize: 14 },
+  demoPayBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.green,
+    paddingVertical: 16,
+    borderRadius: 12,
+    gap: 10,
+    marginTop: 8,
+  },
+  demoPayText: {
+    color: COLORS.gold,
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
   disclaimer: {
     fontSize: 12,
     color: COLORS.gray,
